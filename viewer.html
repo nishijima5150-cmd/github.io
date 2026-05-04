@@ -309,8 +309,9 @@ function renderMembers() {
 
   grid.innerHTML = filtered.map((m, i) => {
     const initials = m.name.replace(/\s/g,'').slice(0,2) || '?';
-    const avatar = m.photo
-      ? `<img class="avatar" src="${escHtml(m.photo)}" alt="${escHtml(m.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    const photoUrl = convertDriveUrl(m.photo);
+    const avatar = photoUrl
+      ? `<img class="avatar" src="${escHtml(photoUrl)}" alt="${escHtml(m.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       + `<div class="avatar-placeholder" style="display:none">${escHtml(initials)}</div>`
       : `<div class="avatar-placeholder">${escHtml(initials)}</div>`;
 
@@ -336,8 +337,9 @@ function renderMembers() {
 function openModal(idx) {
   const m = allMembers[idx];
   const initials = m.name.replace(/\s/g,'').slice(0,2) || '?';
-  const avatar = m.photo
-    ? `<img class="modal-avatar" src="${escHtml(m.photo)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="modal-avatar-placeholder" style="display:none">${escHtml(initials)}</div>`
+  const photoUrl = convertDriveUrl(m.photo);
+  const avatar = photoUrl
+    ? `<img class="modal-avatar" src="${escHtml(photoUrl)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="modal-avatar-placeholder" style="display:none">${escHtml(initials)}</div>`
     : `<div class="modal-avatar-placeholder">${escHtml(initials)}</div>`;
   const tags = m.tags.map(t=>`<span class="modal-tag">${escHtml(t)}</span>`).join('');
   const link = m.url ? `<a class="card-link" href="${escHtml(m.url)}" target="_blank" rel="noopener">🔗 ${escHtml(m.url)}</a>` : '';
@@ -371,10 +373,12 @@ function showError(msg) {
 }
 function convertDriveUrl(url) {
   if (!url) return '';
+  let id = '';
   let m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m) return 'https://drive.google.com/uc?export=view&id=' + m[1];
-  m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return 'https://drive.google.com/uc?export=view&id=' + m[1];
+  if (m) id = m[1];
+  if (!id) { m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if (m) id = m[1]; }
+  if (!id) { m = url.match(/\/d\/([a-zA-Z0-9_-]+)/); if (m) id = m[1]; }
+  if (id) return 'https://lh3.googleusercontent.com/d/' + id;
   return url;
 }
 
