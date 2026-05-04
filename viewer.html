@@ -1,435 +1,373 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>コミュニティメンバー 一覧</title>
 <style>
-  :root {
-    --bg: #f5f6f8;
-    --card: #ffffff;
-    --ink: #1f2024;
-    --muted: #6b7280;
-    --accent: #2c6cdf;
-    --accent-soft: #e6efff;
-    --accent-dark: #1f54b5;
-    --danger: #d93b3b;
-    --border: #e5e7eb;
-    --chip: #f1f3f5;
-    --chip-active: #2c6cdf;
-    --chip-active-ink: #ffffff;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
-    --shadow-lg: 0 10px 40px rgba(0,0,0,0.18);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
-    background: var(--bg); color: var(--ink); line-height: 1.55;
-  }
-  .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px 80px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; background: #f5f6fa; color: #333; }
+  header { background: #fff; padding: 24px 32px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  header h1 { font-size: 1.5rem; font-weight: 700; }
+  header p { font-size: 0.85rem; color: #666; margin-top: 4px; }
+  .stats { display: flex; gap: 12px; }
+  .stat-card { background: #f0f4ff; border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 80px; }
+  .stat-card .num { font-size: 1.6rem; font-weight: 700; color: #3b5bdb; }
+  .stat-card .label { font-size: 0.75rem; color: #666; }
+  .error-banner { background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px; margin: 16px 32px; padding: 12px 16px; color: #c00; font-size: 0.9rem; }
+  .controls { padding: 16px 32px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .search-box { flex: 1; min-width: 200px; position: relative; }
+  .search-box input { width: 100%; padding: 10px 16px 10px 40px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; outline: none; }
+  .search-box input:focus { border-color: #3b5bdb; }
+  .search-box::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; }
+  .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all .2s; }
+  .btn-primary { background: #3b5bdb; color: #fff; }
+  .btn-primary:hover { background: #2f4bbf; }
+  .btn-secondary { background: #f0f0f0; color: #555; }
+  .btn-secondary:hover { background: #e0e0e0; }
+  .btn-outline { background: #fff; color: #3b5bdb; border: 2px solid #3b5bdb; }
+  .btn-outline:hover { background: #f0f4ff; }
+  .tag-filter { padding: 12px 32px; background: #fff; border-bottom: 1px solid #e0e0e0; }
+  .tag-filter-label { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+  .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag-chip { padding: 5px 12px; border-radius: 20px; background: #f0f4ff; color: #3b5bdb; font-size: 0.82rem; cursor: pointer; border: 2px solid transparent; transition: all .15s; user-select: none; }
+  .tag-chip:hover { background: #dce4ff; }
+  .tag-chip.active { background: #3b5bdb; color: #fff; border-color: #2f4bbf; }
+  main { padding: 24px 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); transition: transform .2s, box-shadow .2s; cursor: pointer; }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+  .avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 3px solid #e8eaf6; margin-bottom: 12px; }
+  .avatar-placeholder { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #3b5bdb, #7048e8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+  .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+  .card .role { font-size: 0.82rem; color: #666; margin-bottom: 4px; }
+  .card .location { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
+  .card .bio { font-size: 0.82rem; color: #555; margin-bottom: 10px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .card-tag { padding: 3px 9px; border-radius: 12px; background: #f0f4ff; color: #3b5bdb; font-size: 0.75rem; }
+  .card-link { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; color: #3b5bdb; text-decoration: none; word-break: break-all; }
+  .card-link:hover { text-decoration: underline; }
 
-  .top { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
-  .top h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: 0.02em; }
-  .top .sub { color: var(--muted); font-size: 13px; }
-  .stats { display: flex; gap: 18px; }
-  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 18px; box-shadow: var(--shadow-sm); min-width: 100px; }
-  .stat .num { font-size: 22px; font-weight: 700; color: var(--accent); }
-  .stat .lab { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  /* リスト表示 */
+  .list .card { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-radius: 10px; }
+  .list .avatar, .list .avatar-placeholder { width: 48px; height: 48px; min-width: 48px; font-size: 1.1rem; margin-bottom: 0; }
+  .list .card-body { flex: 1; }
+  .list .card h3 { font-size: 0.95rem; }
+  .list .bio { display: none; }
 
-  .toolbar {
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 12px 14px; box-shadow: var(--shadow-sm); margin-bottom: 16px;
-  }
-  .search { flex: 1 1 280px; display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
-  .search input { flex: 1; border: none; outline: none; background: transparent; font-size: 15px; }
-  .btn {
-    border: 1px solid var(--border); background: var(--card); color: var(--ink);
-    border-radius: 10px; padding: 8px 14px; cursor: pointer; font-size: 14px;
-    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-    text-decoration: none;
-  }
-  .btn:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
-  .view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .view-toggle button { border: none; background: var(--card); padding: 8px 14px; cursor: pointer; font-size: 13px; color: var(--muted); }
-  .view-toggle button.active { background: var(--accent); color: #fff; }
-
-  .tag-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; box-shadow: var(--shadow-sm); margin-bottom: 18px; }
-  .tag-section h3 { font-size: 11px; font-weight: 600; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
-  .tag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { display: inline-block; padding: 5px 11px; border-radius: 999px; background: var(--chip); color: var(--ink); font-size: 12px; cursor: pointer; user-select: none; border: 1px solid transparent; }
-  .chip:hover { border-color: var(--accent); }
-  .chip.active { background: var(--chip-active); color: var(--chip-active-ink); }
-  .chip.empty { color: var(--muted); cursor: default; font-style: italic; }
-
-  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-  .grid.list { grid-template-columns: 1fr; }
-
-  .card {
-    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-    padding: 16px; box-shadow: var(--shadow-sm);
-    display: flex; flex-direction: column; gap: 8px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease; cursor: pointer;
-  }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-  .card .photo, .card .photo-fallback { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--chip); border: 2px solid var(--accent-soft); }
-  .card .photo-fallback { background: linear-gradient(135deg, #2c6cdf, #6aa3ff); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 22px; }
-  .card .name { font-size: 16px; font-weight: 600; margin: 0; }
-  .card .role { font-size: 12px; color: var(--muted); margin: 0; }
-  .card .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
-  .card .tag { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
-  .card .link { color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; padding-top: 8px; border-top: 1px solid var(--border); margin-top: auto; }
-  .card .link:hover { text-decoration: underline; }
-
-  .grid.list .card { flex-direction: row; align-items: center; gap: 14px; cursor: pointer; }
-  .grid.list .card .photo, .grid.list .card .photo-fallback { width: 56px; height: 56px; flex-shrink: 0; }
-  .grid.list .card .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .grid.list .card .link { padding: 0; border: none; margin: 0; }
-
-  .empty, .loading { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); font-size: 15px; }
-  .empty .big, .loading .big { font-size: 40px; margin-bottom: 8px; opacity: 0.5; }
-
-  .error-banner {
-    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
-    border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
-    font-size: 14px;
-  }
-  .error-banner code { background: #fff; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
-
-  .modal-bg { position: fixed; inset: 0; background: rgba(20,22,28,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
-  .modal-bg.show { opacity: 1; pointer-events: auto; }
-  .modal { background: var(--card); border-radius: 16px; box-shadow: var(--shadow-lg); width: 100%; max-width: 480px; max-height: calc(100vh - 40px); overflow: auto; padding: 28px; text-align: center; }
-  .detail-photo, .detail-photo-fallback { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 14px; display: block; border: 3px solid var(--accent-soft); }
-  .detail-photo-fallback { background: linear-gradient(135deg, #2c6cdf, #6aa3ff); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 40px; }
-  .modal .name { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
-  .modal .role { color: var(--muted); margin: 0 0 16px; }
-  .modal .tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin: 2px; display: inline-block; }
-  .url-row { background: var(--bg); border-radius: 10px; padding: 10px 14px; margin: 16px 0; word-break: break-all; }
-  .url-row a { color: var(--accent); text-decoration: none; }
-
-  .footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px; }
+  /* モーダル */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 32px; max-width: 520px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #888; }
+  .modal-avatar { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #e8eaf6; }
+  .modal-avatar-placeholder { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #3b5bdb, #7048e8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; }
+  .modal h2 { font-size: 1.3rem; margin: 12px 0 4px; }
+  .modal .role { color: #666; font-size: 0.9rem; margin-bottom: 4px; }
+  .modal .location { color: #888; font-size: 0.85rem; margin-bottom: 12px; }
+  .modal .bio-full { font-size: 0.9rem; color: #444; line-height: 1.7; margin-bottom: 16px; }
+  .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .modal-tag { padding: 4px 12px; border-radius: 14px; background: #f0f4ff; color: #3b5bdb; font-size: 0.8rem; }
+  .empty { text-align: center; padding: 64px; color: #aaa; }
+  .loading { text-align: center; padding: 64px; color: #888; }
+  footer { text-align: center; padding: 16px; font-size: 0.8rem; color: #bbb; }
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="top">
-    <div>
-      <h1>コミュニティメンバー 一覧</h1>
-      <div class="sub">自己登録フォームから集まったメンバーを表示しています</div>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="num" id="statTotal">–</div><div class="lab">メンバー</div></div>
-      <div class="stat"><div class="num" id="statTags">–</div><div class="lab">タグ</div></div>
-    </div>
+
+<header>
+  <div>
+    <h1>コミュニティメンバー 一覧</h1>
+    <p>自己登録フォームから集まったメンバーを表示しています</p>
   </div>
-
-  <div id="errorArea"></div>
-
-  <div class="toolbar">
-    <div class="search">
-      <span aria-hidden="true">🔎</span>
-      <input id="searchBox" type="text" placeholder="名前・役割・タグで検索…" />
-    </div>
-    <div class="view-toggle">
-      <button id="viewGrid" class="active">カード</button>
-      <button id="viewList">リスト</button>
-    </div>
-    <a class="btn primary" id="formLink" target="_blank" rel="noopener" style="display:none">＋ 自分を登録する</a>
-    <button class="btn" id="reloadBtn">↻ 再読込</button>
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="stat-members">–</div><div class="label">メンバー</div></div>
+    <div class="stat-card"><div class="num" id="stat-tags">–</div><div class="label">タグ</div></div>
   </div>
+</header>
 
-  <div class="tag-section">
-    <h3>スキル・タグで絞り込み（複数選択：AND検索）</h3>
-    <div class="tag-chips" id="tagChips"></div>
+<div id="error-banner" class="error-banner" style="display:none"></div>
+
+<div class="controls">
+  <div class="search-box">
+    <input type="text" id="search" placeholder="名前・役割・地域・タグで検索...">
   </div>
-
-  <div class="grid" id="memberGrid">
-    <div class="loading"><div class="big">⏳</div>読み込み中…</div>
-  </div>
-
-  <div class="footer">最終更新：<span id="lastUpdate">–</span></div>
+  <button class="btn btn-primary" id="btn-card" onclick="setView('card')">カード</button>
+  <button class="btn btn-secondary" id="btn-list" onclick="setView('list')">リスト</button>
+  <button class="btn btn-outline" id="btn-form" style="display:none" onclick="openForm()">＋ 自分を登録する</button>
+  <button class="btn btn-secondary" onclick="loadData()">↺ 再読込</button>
 </div>
 
-<div class="modal-bg" id="detailModalBg">
-  <div class="modal" id="detailContent"></div>
+<div class="tag-filter">
+  <div class="tag-filter-label">スキル・タグで絞り込み（複数選択：AND検索）</div>
+  <div class="tag-chips" id="tag-chips"></div>
+</div>
+
+<main>
+  <div id="grid" class="grid"></div>
+</main>
+
+<footer id="footer">最終更新：–</footer>
+
+<!-- モーダル -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-body"></div>
+  </div>
 </div>
 
 <script>
-  // ============================================================
-  //  ▼ 設定 — ここを書き換えてください ▼
-  // ============================================================
-  const CONFIG = {
-    // Googleシートの「ウェブに公開」で出るCSVのURLを貼り付け
-    // 例: https://docs.google.com/spreadsheets/d/e/2PACX-1vXXXXXX/pub?output=csv
-    SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSpSFVLxe0VKVaMOoHSrxhLwOP4_-ckmrsZU_P7lzSLXFoPTF21vjYa3lSYxe1SpsYucwmBt_kgwWxK/pub?gid=1488738074&single=true&output=csv",
+// ============================================================
+//  ▼ 設定 — ここを書き換えてください ▼
+// ============================================================
+const CONFIG = {
+  // Googleシートの「ウェブに公開」で出るCSVのURL
+  SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSpSFVLxe0VKVaMOoHSrxhLwOP4_-ckmrsZU_P7lzSLXFoPTF21vjYa3lSYxe1SpsYucwmBt_kgwWxK/pub?gid=1488738074&single=true&output=csv",
 
-    // Googleフォームの公開URL（メンバーが登録するフォーム）
-    // 空にするとボタンが非表示になります
-    FORM_URL: "hhttps://forms.gle/2tbedjSF3RLK2h3WA",
+  // Googleフォームの公開URL（空にするとボタン非表示）
+  FORM_URL: "",
 
-    // シートの列名（Googleフォームの質問文と同じにしてください）
-    COLUMNS: {
-      name1:  "氏",
-      name2:  "名",
-       name3:  "氏よみがな",
-      name4:  "名よみがな",
-      address:  "活動している県、市、地名など",
-      role:  "役割・職種",
-      url:   "ホームページURL",
-      tags:  "スキル・タグ",
-      PR:  "自己PR",
-      photo: "顔写真"
-    },
+  // ★ フォームの実際の列名に合わせてください
+  COLUMNS: {
+    lastName:  "氏",          // 姓
+    firstName: "名",          // 名
+    role:      "役割・職種",
+    url:       "ホームページURL",
+    tags:      "スキル・タグ",
+    photo:     "顔写真",
+    location:  "活動している県、市、地名など",
+    bio:       "自己PR"
+  },
 
-    // タグの区切り（カンマ・句点・空白いずれもOK）
-    TAG_SEPARATOR: /[,、，\s\/]+/
-  };
-  // ============================================================
+  // タグの区切り文字
+  TAG_SEPARATOR: /[,、，\s\/；;]+/
+};
+// ============================================================
 
-  const state = {
-    members: [],
-    search: "",
-    activeTags: new Set(),
-    view: "grid"
-  };
+let allMembers = [];
+let activeFilters = new Set();
+let currentView = 'card';
 
-  const $ = id => document.getElementById(id);
-  const grid = $("memberGrid");
-  const tagChipsEl = $("tagChips");
-  const searchBox = $("searchBox");
-  const errorArea = $("errorArea");
-  const formLink = $("formLink");
+async function loadData() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<div class="loading">読み込み中…</div>';
+  document.getElementById('error-banner').style.display = 'none';
 
-  // ---------- CSVパーサ（quoted対応） ----------
-  function parseCSV(text) {
-    const rows = [];
-    let row = [], field = "", inQ = false, i = 0;
-    while (i < text.length) {
-      const c = text[i];
-      if (inQ) {
-        if (c === '"' && text[i+1] === '"') { field += '"'; i += 2; continue; }
-        if (c === '"') { inQ = false; i++; continue; }
-        field += c; i++;
-      } else {
-        if (c === '"') { inQ = true; i++; continue; }
-        if (c === ',') { row.push(field); field = ""; i++; continue; }
-        if (c === '\r') { i++; continue; }
-        if (c === '\n') { row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
-        field += c; i++;
-      }
-    }
-    if (field.length || row.length) { row.push(field); rows.push(row); }
-    return rows;
+  if (!CONFIG.SHEET_CSV_URL) {
+    showError('SHEET_CSV_URL が設定されていません。viewer.html の CONFIG を編集してください。');
+    grid.innerHTML = '';
+    return;
   }
 
-  // ---------- Google Drive 画像URL → 表示可能URL ----------
-  function driveImageUrl(url) {
-    if (!url) return "";
-    const m = String(url).match(/[-\w]{25,}/);
-    if (!m) return url;
-    return `https://drive.google.com/thumbnail?id=${m[0]}&sz=w400`;
+  try {
+    const url = CONFIG.SHEET_CSV_URL + '&t=' + Date.now();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    parseCSV(text);
+    document.getElementById('footer').textContent = '最終更新：' + new Date().toLocaleString('ja-JP');
+  } catch (e) {
+    showError('データを読み込めませんでした：' + e.message + '。シートが「ウェブに公開」されているか、URLが正しいかをご確認ください。');
+    grid.innerHTML = '';
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let cur = '', inQ = false;
+  const chars = [...text];
+  let fields = [];
+
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c === '"') {
+      if (inQ && chars[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      fields.push(cur); cur = '';
+    } else if ((c === '\n' || c === '\r') && !inQ) {
+      if (c === '\r' && chars[i+1] === '\n') i++;
+      fields.push(cur); cur = '';
+      rows.push(fields); fields = [];
+    } else cur += c;
+  }
+  if (cur || fields.length) { fields.push(cur); rows.push(fields); }
+
+  if (rows.length < 2) { showError('シートにデータがありません。'); return; }
+
+  const headers = rows[0].map(h => h.trim());
+  const C = CONFIG.COLUMNS;
+
+  // 列インデックスを取得
+  function idx(colName) {
+    if (!colName) return -1;
+    const i = headers.indexOf(colName);
+    return i;
   }
 
-  // ---------- ユーティリティ ----------
-  function getInitials(name) {
-    const parts = (name || "").replace(/\s+/g, " ").trim().split(" ");
-    if (parts.length >= 2) return (parts[0][0] || "") + (parts[1][0] || "");
-    return (name || "?").slice(0, 2);
-  }
-  function allTags() {
-    return Array.from(new Set(state.members.flatMap(m => m.tags || []))).sort();
-  }
-  function showError(msg, isHtml) {
-    errorArea.innerHTML = `<div class="error-banner">${isHtml ? msg : escapeHtml(msg)}</div>`;
-  }
-  function clearError() { errorArea.innerHTML = ""; }
-  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  const iLast  = idx(C.lastName);
+  const iFirst = idx(C.firstName);
+  const iRole  = idx(C.role);
+  const iUrl   = idx(C.url);
+  const iTags  = idx(C.tags);
+  const iPhoto = idx(C.photo);
+  const iLoc   = idx(C.location);
+  const iBio   = idx(C.bio);
 
-  // ---------- データ読み込み ----------
-  async function loadData() {
-    if (!CONFIG.SHEET_CSV_URL) {
-      showError(`<strong>初期設定が必要です。</strong> このファイル内の <code>CONFIG.SHEET_CSV_URL</code> に、GoogleシートをCSV公開したURLを設定してください。手順は <code>SETUP.md</code> をご覧ください。`, true);
-      grid.innerHTML = `<div class="empty"><div class="big">⚙️</div>初期設定をしてください</div>`;
-      return;
-    }
-    grid.innerHTML = `<div class="loading"><div class="big">⏳</div>読み込み中…</div>`;
-    try {
-      // キャッシュ回避
-      const url = CONFIG.SHEET_CSV_URL + (CONFIG.SHEET_CSV_URL.includes("?") ? "&" : "?") + "_t=" + Date.now();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      const rows = parseCSV(text);
-      if (rows.length < 2) { state.members = []; render(); return; }
-      const header = rows[0].map(h => h.trim());
-      const idx = (key) => header.indexOf(CONFIG.COLUMNS[key]);
-      const i = { name: idx("name"), role: idx("role"), url: idx("url"), tags: idx("tags"), photo: idx("photo") };
-      if (i.name < 0) {
-        showError(`列「${CONFIG.COLUMNS.name}」が見つかりません。フォームの質問文と CONFIG.COLUMNS を一致させてください。検出された列：${header.join(" / ")}`);
-        grid.innerHTML = "";
-        return;
-      }
-      state.members = rows.slice(1)
-        .filter(r => r[i.name] && r[i.name].trim())
-        .map((r, k) => ({
-          id: "row_" + k,
-          name: (r[i.name] || "").trim(),
-          role: i.role >= 0 ? (r[i.role] || "").trim() : "",
-          url:  i.url  >= 0 ? (r[i.url]  || "").trim() : "",
-          tags: i.tags >= 0
-            ? String(r[i.tags] || "").split(CONFIG.TAG_SEPARATOR).map(s=>s.trim()).filter(Boolean)
-            : [],
-          photo: i.photo >= 0 ? driveImageUrl((r[i.photo] || "").trim()) : ""
-        }));
-      clearError();
-      render();
-      $("lastUpdate").textContent = new Date().toLocaleString("ja-JP");
-    } catch (err) {
-      console.error(err);
-      showError(`データを読み込めませんでした：${err.message}。シートが「ウェブに公開」されているか、URLが正しいかをご確認ください。`);
-      grid.innerHTML = "";
-    }
+  // 不足列チェック
+  const missing = [];
+  if (iLast < 0 && iFirst < 0) missing.push(C.lastName + ' または ' + C.firstName);
+  if (iRole < 0) missing.push(C.role);
+  if (missing.length) {
+    showError('列 「' + missing.join('」「') + '」 が見つかりません。CONFIG.COLUMNSを確認してください。検出された列：' + headers.join(' / '));
+    return;
   }
 
-  // ---------- レンダリング ----------
-  function matches(member) {
-    const q = state.search.trim().toLowerCase();
-    if (q) {
-      const haystack = (member.name + " " + member.role + " " + (member.tags||[]).join(" ")).toLowerCase();
-      if (!haystack.includes(q)) return false;
-    }
-    if (state.activeTags.size > 0) {
-      for (const t of state.activeTags) if (!(member.tags||[]).includes(t)) return false;
-    }
+  const members = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (row.every(c => !c.trim())) continue;
+    const get = i => (i >= 0 && i < row.length) ? row[i].trim() : '';
+
+    const lastName  = get(iLast);
+    const firstName = get(iFirst);
+    const fullName  = (lastName + ' ' + firstName).trim() || '名前未登録';
+
+    const rawTags = get(iTags);
+    const tags = rawTags ? rawTags.split(CONFIG.TAG_SEPARATOR).map(t=>t.trim()).filter(Boolean) : [];
+
+    members.push({
+      name: fullName,
+      role: get(iRole),
+      url:  get(iUrl),
+      tags,
+      photo: get(iPhoto),
+      location: get(iLoc),
+      bio: get(iBio)
+    });
+  }
+
+  allMembers = members;
+  buildTagChips();
+  renderMembers();
+  document.getElementById('stat-members').textContent = members.length;
+
+  if (CONFIG.FORM_URL) {
+    document.getElementById('btn-form').style.display = '';
+  }
+}
+
+function buildTagChips() {
+  const tagCount = {};
+  allMembers.forEach(m => m.tags.forEach(t => { tagCount[t] = (tagCount[t]||0)+1; }));
+  const sorted = Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+
+  document.getElementById('stat-tags').textContent = sorted.length;
+  const chips = document.getElementById('tag-chips');
+  chips.innerHTML = '';
+  sorted.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip' + (activeFilters.has(tag) ? ' active' : '');
+    chip.textContent = tag;
+    chip.onclick = () => toggleFilter(tag);
+    chips.appendChild(chip);
+  });
+}
+
+function toggleFilter(tag) {
+  if (activeFilters.has(tag)) activeFilters.delete(tag);
+  else activeFilters.add(tag);
+  buildTagChips();
+  renderMembers();
+}
+
+function renderMembers() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const grid = document.getElementById('grid');
+  grid.className = currentView === 'list' ? 'list' : 'grid';
+
+  const filtered = allMembers.filter(m => {
+    const text = [m.name, m.role, m.location, m.bio, ...m.tags].join(' ').toLowerCase();
+    if (q && !text.includes(q)) return false;
+    if (activeFilters.size > 0 && ![...activeFilters].every(f => m.tags.includes(f))) return false;
     return true;
+  });
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">該当するメンバーが見つかりません</div>';
+    return;
   }
 
-  function renderTags() {
-    tagChipsEl.innerHTML = "";
-    const tags = allTags();
-    if (tags.length === 0) {
-      const e = document.createElement("span");
-      e.className = "chip empty"; e.textContent = "タグがまだ登録されていません";
-      tagChipsEl.appendChild(e);
-      return;
-    }
-    tags.forEach(tag => {
-      const chip = document.createElement("span");
-      chip.className = "chip" + (state.activeTags.has(tag) ? " active" : "");
-      chip.textContent = tag;
-      chip.addEventListener("click", () => {
-        if (state.activeTags.has(tag)) state.activeTags.delete(tag); else state.activeTags.add(tag);
-        render();
-      });
-      tagChipsEl.appendChild(chip);
-    });
-  }
+  grid.innerHTML = filtered.map((m, i) => {
+    const initials = m.name.replace(/\s/g,'').slice(0,2) || '?';
+    const avatar = m.photo
+      ? `<img class="avatar" src="${escHtml(m.photo)}" alt="${escHtml(m.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      + `<div class="avatar-placeholder" style="display:none">${escHtml(initials)}</div>`
+      : `<div class="avatar-placeholder">${escHtml(initials)}</div>`;
 
-  function photoEl(member) {
-    if (member.photo) {
-      const img = document.createElement("img");
-      img.className = "photo"; img.src = member.photo; img.alt = member.name; img.loading = "lazy";
-      img.onerror = () => {
-        const fb = document.createElement("div"); fb.className = "photo-fallback"; fb.textContent = getInitials(member.name);
-        img.replaceWith(fb);
-      };
-      return img;
-    }
-    const fb = document.createElement("div"); fb.className = "photo-fallback"; fb.textContent = getInitials(member.name);
-    return fb;
-  }
+    const tags = m.tags.map(t=>`<span class="card-tag">${escHtml(t)}</span>`).join('');
+    const link = m.url ? `<a class="card-link" href="${escHtml(m.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 ${escHtml(m.url)}</a>` : '';
+    const loc  = m.location ? `<div class="location">📍 ${escHtml(m.location)}</div>` : '';
+    const bio  = m.bio ? `<div class="bio">${escHtml(m.bio)}</div>` : '';
 
-  function renderCards() {
-    grid.innerHTML = "";
-    grid.className = "grid" + (state.view === "list" ? " list" : "");
-    const filtered = state.members.filter(matches);
-    if (filtered.length === 0) {
-      const e = document.createElement("div"); e.className = "empty";
-      e.innerHTML = state.members.length === 0
-        ? `<div class="big">👥</div>まだ登録メンバーがいません。フォームから登録してください。`
-        : `<div class="big">🔍</div>条件に一致するメンバーが見つかりませんでした。`;
-      grid.appendChild(e);
-      return;
-    }
-    filtered.forEach(m => {
-      const card = document.createElement("div"); card.className = "card";
-      card.appendChild(photoEl(m));
-      const info = document.createElement("div"); info.className = "info";
-      const name = document.createElement("h3"); name.className = "name"; name.textContent = m.name; info.appendChild(name);
-      if (m.role) { const r = document.createElement("p"); r.className = "role"; r.textContent = m.role; info.appendChild(r); }
-      if ((m.tags||[]).length) {
-        const tw = document.createElement("div"); tw.className = "tags";
-        m.tags.forEach(t => { const tEl = document.createElement("span"); tEl.className = "tag"; tEl.textContent = t; tw.appendChild(tEl); });
-        info.appendChild(tw);
-      }
-      if (m.url) {
-        const link = document.createElement("a"); link.className = "link"; link.href = m.url; link.target = "_blank"; link.rel = "noopener";
-        link.textContent = m.url.replace(/^https?:\/\//, "");
-        link.addEventListener("click", e => e.stopPropagation());
-        info.appendChild(link);
-      }
-      card.appendChild(info);
-      card.addEventListener("click", () => openDetail(m.id));
-      grid.appendChild(card);
-    });
-  }
+    return `<div class="card" onclick="openModal(${i})">
+      ${avatar}
+      <div class="card-body">
+        <h3>${escHtml(m.name)}</h3>
+        <div class="role">${escHtml(m.role)}</div>
+        ${loc}
+        ${bio}
+        <div class="card-tags">${tags}</div>
+        ${link}
+      </div>
+    </div>`;
+  }).join('');
+}
 
-  function renderStats() {
-    $("statTotal").textContent = state.members.length;
-    $("statTags").textContent = allTags().length;
-  }
+function openModal(idx) {
+  const m = allMembers[idx];
+  const initials = m.name.replace(/\s/g,'').slice(0,2) || '?';
+  const avatar = m.photo
+    ? `<img class="modal-avatar" src="${escHtml(m.photo)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="modal-avatar-placeholder" style="display:none">${escHtml(initials)}</div>`
+    : `<div class="modal-avatar-placeholder">${escHtml(initials)}</div>`;
+  const tags = m.tags.map(t=>`<span class="modal-tag">${escHtml(t)}</span>`).join('');
+  const link = m.url ? `<a class="card-link" href="${escHtml(m.url)}" target="_blank" rel="noopener">🔗 ${escHtml(m.url)}</a>` : '';
+  const loc  = m.location ? `<div class="location">📍 ${escHtml(m.location)}</div>` : '';
+  const bio  = m.bio ? `<div class="bio-full">${escHtml(m.bio)}</div>` : '';
 
-  function render() { renderTags(); renderCards(); renderStats(); }
+  document.getElementById('modal-body').innerHTML = `
+    ${avatar}
+    <h2>${escHtml(m.name)}</h2>
+    <div class="role">${escHtml(m.role)}</div>
+    ${loc}
+    ${bio}
+    <div class="modal-tags">${tags}</div>
+    ${link}
+  `;
+  document.getElementById('modal').classList.add('open');
+}
 
-  // ---------- 詳細モーダル ----------
-  const detailModal = $("detailModalBg");
-  const detailContent = $("detailContent");
-  function openDetail(id) {
-    const m = state.members.find(x => x.id === id);
-    if (!m) return;
-    detailContent.innerHTML = "";
-    if (m.photo) {
-      const img = document.createElement("img"); img.className = "detail-photo"; img.src = m.photo; img.alt = m.name;
-      img.onerror = () => { const fb = document.createElement("div"); fb.className = "detail-photo-fallback"; fb.textContent = getInitials(m.name); img.replaceWith(fb); };
-      detailContent.appendChild(img);
-    } else {
-      const fb = document.createElement("div"); fb.className = "detail-photo-fallback"; fb.textContent = getInitials(m.name); detailContent.appendChild(fb);
-    }
-    const name = document.createElement("h2"); name.className = "name"; name.textContent = m.name; detailContent.appendChild(name);
-    if (m.role) { const r = document.createElement("p"); r.className = "role"; r.textContent = m.role; detailContent.appendChild(r); }
-    if ((m.tags||[]).length) {
-      const tw = document.createElement("div");
-      m.tags.forEach(t => { const tEl = document.createElement("span"); tEl.className = "tag"; tEl.textContent = t; tw.appendChild(tEl); });
-      detailContent.appendChild(tw);
-    }
-    if (m.url) {
-      const row = document.createElement("div"); row.className = "url-row";
-      row.innerHTML = `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.url)}</a>`;
-      detailContent.appendChild(row);
-    }
-    const close = document.createElement("button"); close.className = "btn"; close.textContent = "閉じる"; close.style.marginTop = "8px";
-    close.addEventListener("click", closeDetail);
-    detailContent.appendChild(close);
-    detailModal.classList.add("show");
-  }
-  function closeDetail() { detailModal.classList.remove("show"); }
-  detailModal.addEventListener("click", e => { if (e.target === detailModal) closeDetail(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") closeDetail(); });
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function openForm() { window.open(CONFIG.FORM_URL, '_blank'); }
+function setView(v) {
+  currentView = v;
+  document.getElementById('btn-card').className = 'btn ' + (v==='card' ? 'btn-primary' : 'btn-secondary');
+  document.getElementById('btn-list').className = 'btn ' + (v==='list' ? 'btn-primary' : 'btn-secondary');
+  renderMembers();
+}
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-  // ---------- イベント ----------
-  searchBox.addEventListener("input", e => { state.search = e.target.value; renderCards(); });
-  $("viewGrid").addEventListener("click", () => { state.view = "grid"; $("viewGrid").classList.add("active"); $("viewList").classList.remove("active"); renderCards(); });
-  $("viewList").addEventListener("click", () => { state.view = "list"; $("viewList").classList.add("active"); $("viewGrid").classList.remove("active"); renderCards(); });
-  $("reloadBtn").addEventListener("click", loadData);
+document.getElementById('search').addEventListener('input', renderMembers);
 
-  if (CONFIG.FORM_URL) { formLink.href = CONFIG.FORM_URL; formLink.style.display = "inline-flex"; }
-
-  // 初回読み込み + 5分ごと自動更新
-  loadData();
-  setInterval(loadData, 5 * 60 * 1000);
+loadData();
 </script>
 </body>
 </html>
