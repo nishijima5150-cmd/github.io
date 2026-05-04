@@ -71,9 +71,32 @@
   .empty { text-align: center; padding: 64px; color: #aaa; }
   .loading { text-align: center; padding: 64px; color: #888; }
   footer { text-align: center; padding: 16px; font-size: 0.8rem; color: #bbb; }
+
+  /* パスワード画面 */
+  #pw-screen { position: fixed; inset: 0; background: #f5f6fa; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  .pw-box { background: #fff; border-radius: 16px; padding: 40px; max-width: 360px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.12); text-align: center; }
+  .pw-box h2 { font-size: 1.3rem; margin-bottom: 8px; color: #333; }
+  .pw-box p { font-size: 0.85rem; color: #888; margin-bottom: 24px; }
+  .pw-box input { width: 100%; padding: 12px 16px; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; outline: none; text-align: center; letter-spacing: 2px; margin-bottom: 12px; }
+  .pw-box input:focus { border-color: #3b5bdb; }
+  .pw-box button { width: 100%; padding: 12px; background: #3b5bdb; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+  .pw-box button:hover { background: #2f4bbf; }
+  .pw-error { color: #c00; font-size: 0.85rem; margin-top: 8px; display: none; }
+  #main-content { display: none; }
 </style>
 </head>
 <body>
+<div id="pw-screen">
+  <div class="pw-box">
+    <h2>🔒 コミュニティメンバー一覧</h2>
+    <p>閲覧にはパスワードが必要です</p>
+    <input type="password" id="pw-input" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')checkPw()">
+    <button onclick="checkPw()">入力する</button>
+    <div class="pw-error" id="pw-error">パスワードが違います</div>
+  </div>
+</div>
+<div id="main-content">
+
 
 <header>
   <div>
@@ -388,7 +411,24 @@ function escHtml(s) {
 
 document.getElementById('search').addEventListener('input', renderMembers);
 
-loadData();
+
+const CORRECT_PW = 'friend2026';
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === CORRECT_PW) {
+    document.getElementById('pw-screen').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    loadData();
+  } else {
+    const err = document.getElementById('pw-error');
+    err.style.display = 'block';
+    err.textContent = 'パスワードが違います';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
 </script>
+</div>
 </body>
 </html>
